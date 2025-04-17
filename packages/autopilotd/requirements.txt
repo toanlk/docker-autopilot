@@ -1,0 +1,6 @@
+mouseinfo
+requests>=2.31.0
+flask
+blinker==1.4
+pyautogui
+pyperclip

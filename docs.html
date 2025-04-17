@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Autopilot REST API - Computer Action</title>
+    <style>
+        :root {
+            --bg-color: #121212;
+            --text-color: #e0e0e0;
+            --primary-color: #bb86fc;
+            --secondary-color: #03dac6;
+            --surface-color: #1e1e1e;
+            --border-color: #333;
+            --code-bg: #2a2a2a;
+            --required-bg: #cf6679;
+            --required-text: #121212;
+            --link-color: #8ab4f8;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            display: flex;
+            min-height: 100vh;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        .sidebar-left {
+            width: 240px;
+            background-color: var(--surface-color);
+            border-right: 1px solid var(--border-color);
+            padding: 20px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+        }
+        .sidebar-left .logo {
+            font-weight: bold;
+            font-size: 1.2em;
+            margin-bottom: 20px;
+        }
+        .sidebar-left nav h3 {
+            font-size: 0.9em;
+            color: #aaa;
+            text-transform: uppercase;
+            margin: 20px 0 10px;
+            font-weight: 500;
+        }
+        .sidebar-left nav ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .sidebar-left nav ul li a {
+            display: flex;
+            align-items: center;
+            padding: 8px 10px;
+            color: var(--text-color);
+            text-decoration: none;
+            border-radius: 4px;
+            margin-bottom: 4px;
+        }
+        .sidebar-left nav ul li a:hover, .sidebar-left nav ul li a.active {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        .sidebar-left nav ul li a svg {
+            margin-right: 10px;
+            opacity: 0.7;
+        }
+        .main-content {
+            flex-grow: 1;
+            padding: 40px 60px;
+            max-width: 800px;
+        }
+        .main-content h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+        .main-content h2 {
+            font-size: 1.8em;
+            margin-top: 40px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+            font-weight: 500;
+        }
+        .main-content h3 {
+            font-size: 1.4em;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            font-weight: 500;
+        }
+        .main-content p {
+            margin-bottom: 15px;
+        }
+        .param-details {
+            margin-bottom: 15px;
+        }
+        .param-name {
+            font-family: 'SF Mono', 'Consolas', 'Menlo', monospace;
+            font-size: 0.95em;
+        }
+        .param-type {
+            font-style: italic;
+            color: #aaa;
+            margin-left: 8px;
+        }
+        .param-required {
+            background-color: var(--required-bg);
+            color: var(--required-text);
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 0.8em;
+            font-weight: bold;
+            margin-left: 8px;
+            text-transform: uppercase;
+        }
+        .param-description {
+            margin-left: 20px;
+            margin-top: 5px;
+            color: #bbb;
+        }
+        .action-list code {
+            background-color: var(--code-bg);
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-family: 'SF Mono', 'Consolas', 'Menlo', monospace;
+            font-size: 0.9em;
+        }
+        details {
+            background-color: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            margin-bottom: 15px;
+            overflow: hidden;
+        }
+        summary {
+            padding: 15px 20px;
+            cursor: pointer;
+            font-weight: 500;
+            font-family: 'SF Mono', 'Consolas', 'Menlo', monospace;
+            display: flex;
+            align-items: center;
+        }
+        summary::before {
+            content: '\25B6'; /* Right-pointing triangle */
+            margin-right: 10px;
+            font-size: 0.8em;
+            transition: transform 0.2s ease-in-out;
+        }
+        details[open] summary::before {
+            transform: rotate(90deg);
+        }
+        .details-content {
+            padding: 0 20px 20px 40px; /* Indent content */
+            border-top: 1px solid var(--border-color);
+        }
+        pre {
+            background-color: var(--code-bg);
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-family: 'SF Mono', 'Consolas', 'Menlo', monospace;
+            font-size: 0.9em;
+            position: relative;
+        }
+        pre code {
+            background-color: transparent;
+            padding: 0;
+            border-radius: 0;
+        }
+        .copy-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: var(--text-color);
+            padding: 5px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            opacity: 0.7;
+        }
+        .copy-button:hover {
+            opacity: 1;
+        }
+        .sidebar-right {
+            width: 220px;
+            border-left: 1px solid var(--border-color);
+            padding: 40px 20px;
+            box-sizing: border-box;
+            font-size: 0.9em;
+        }
+        .sidebar-right h4 {
+            font-size: 0.9em;
+            color: #aaa;
+            text-transform: uppercase;
+            margin: 0 0 15px;
+            font-weight: 500;
+        }
+        .sidebar-right ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .sidebar-right ul li a {
+            display: block;
+            padding: 5px 0;
+            color: #bbb;
+            text-decoration: none;
+        }
+        .sidebar-right ul li a:hover {
+            color: var(--text-color);
+        }
+        .sidebar-right ul ul {
+            padding-left: 15px;
+            margin-top: 5px;
+        }
+
+        /* Header placeholder */
+        .header {
+            height: 60px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            background-color: var(--surface-color);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        .header .logo {
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+        .header .search-bar {
+            margin-left: auto; /* Pushes search to the right */
+            /* Basic styling for placeholder */
+            background-color: var(--code-bg);
+            padding: 5px 10px;
+            border-radius: 4px;
+            color: #aaa;
+            width: 200px;
+            text-align: right;
+        }
+
+        /* Adjust layout to include header */
+        .content-wrapper {
+            display: flex;
+            flex-grow: 1;
+        }
+        .page-container {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="sidebar-left">
+        <div class="logo">autopilot</div>
+        <nav>
+            <h3>Guides</h3>
+            <ul>
+                <li><a href="#">Introduction</a></li>
+            </ul>
+            <h3>REST API</h3>
+            <ul>
+                <li><a href="#">Overview</a></li>
+                <li><a href="#">Endpoints</a>
+                    <ul>
+                        <li><a href="#" class="active">Computer Action</a></li>
+                        <li><a href="#">Usage Examples</a></li>
+                    </ul>
+                </li>
+            </ul>
+            <h3>Community</h3>
+            <ul>
+                 <li><a href="#"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297 24 5.67 18.627.297 12 .297z"/></svg>GitHub</a></li>
+                 <li><a href="#"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M20.317 4.369a1.875 1.875 0 00-2.651-.001L16 6.038a13.07 13.07 0 00-1.596-.348 14.05 14.05 0 00-4.808 0A13.08 13.08 0 008 6.038l-1.666-1.67a1.875 1.875 0 00-2.651.001 1.875 1.875 0 00-.001 2.651L5.38 7.084a14.91 14.91 0 00-1.4 4.916 14.91 14.91 0 001.4 4.916l-1.697 1.697a1.875 1.875 0 00.001 2.651 1.875 1.875 0 002.651.001L8 17.962a13.07 13.07 0 001.596.348 14.05 14.05 0 004.808 0 13.08 13.08 0 001.596-.348l1.666 1.67a1.875 1.875 0 002.651-.001 1.875 1.875 0 00.001-2.651L18.62 16.916a14.91 14.91 0 001.4-4.916 14.91 14.91 0 00-1.4-4.916l1.697-1.697a1.875 1.875 0 00-.001-2.651zm-5.65 9.975a2.625 2.625 0 110-5.25 2.625 2.625 0 010 5.25zm-6.334 0a2.625 2.625 0 110-5.25 2.625 2.625 0 010 5.25z"/></svg>Discord</a></li>
+                 <li><a href="#"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M22.46 6c-.77.35-1.6.58-2.46.67.9-.53 1.58-1.37 1.9-2.37-.84.5-1.77.86-2.77 1.05C18.37 4.5 17.26 4 16 4c-2.35 0-4.27 1.92-4.27 4.29 0 .34.04.67.11.98C8.28 9.09 5.11 7.38 3 4.79c-.37.63-.58 1.37-.58 2.15 0 1.49.75 2.81 1.91 3.56-.71 0-1.37-.22-1.95-.5v.03c0 2.08 1.48 3.82 3.44 4.21a4.22 4.22 0 0 1-1.93.07 4.28 4.28 0 0 0 4 2.98 8.521 8.521 0 0 1-5.33 1.84c-.34 0-.68-.02-1.01-.06C3.18 20.57 5.36 21 7.68 21c7.65 0 11.78-6.35 11.78-11.78l-.01-.54c.8-.58 1.48-1.3 2.01-2.14z"/></svg>Twitter</a></li>
+                 <li><a href="#"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>Blog</a></li>
+            </ul>
+        </nav>
+    </div>
+
+    <div class="page-container">
+        <div class="header">
+             <div class="logo">autopilot</div> <!-- Repeated logo for header -->
+             <div class="search-bar">Search or ask... &#8984;K</div>
+        </div>
+        <div class="content-wrapper">
+            <div class="main-content">
+                <p style="color: #aaa; font-size: 0.9em;">Endpoints</p>
+                <h1>Computer Action</h1>
+                <p>Execute computer actions in the virtual desktop environment</p>
+                <p>Execute actions like mouse movements, clicks, keyboard input, and screenshots in the Autopilot desktop environment.</p>
+
+                <h2 id="request">Request</h2>
+                <div class="param-details">
+                    <span class="param-name">action</span>
+                    <span class="param-type">string</span>
+                    <span class="param-required">required</span>
+                    <div class="param-description action-list">
+                        The type of computer action to perform. Must be one of: <code>move_mouse</code>, <code>trace_mouse</code>, <code>click_mouse</code>, <code>press_mouse</code>, <code>drag_mouse</code>, <code>scroll</code>, <code>type_keys</code>, <code>press_keys</code>, <code>type_text</code>, <code>hotkey</code>, <code>wait</code>, <code>screenshot</code>, <code>execute_command</code>, <code>clipboard</code>, <code>cursor_position</code>.
+                    </div>
+                </div>
+
+                <h3 id="mouse-actions">Mouse Actions</h3>
+                <details>
+                    <summary>move_mouse</summary>
+                    <div class="details-content">
+                        <div class="param-details">
+                            <span class="param-name">coordinates</span>
+                            <span class="param-type">object</span>
+                            <span class="param-required">required</span>
+                            <div class="param-description">The target coordinates to move to.</div>
+                            <details style="margin-left: 20px; margin-top: 10px; background-color: var(--bg-color); border-color: #444;">
+                                <summary style="padding: 10px 15px; font-size: 0.9em;">Show coordinates properties</summary>
+                                <div class="details-content" style="padding: 10px 15px 15px 30px;">
+                                    <div class="param-details">
+                                        <span class="param-name">x</span>
+                                        <span class="param-type">integer</span>
+                                        <span class="param-required">required</span>
+                                        <div class="param-description">The x-coordinate.</div>
+                                    </div>
+                                    <div class="param-details">
+                                        <span class="param-name">y</span>
+                                        <span class="param-type">integer</span>
+                                        <span class="param-required">required</span>
+                                        <div class="param-description">The y-coordinate.</div>
+                                    </div>
+                                </div>
+                            </details>
+                        </div>
+                        <h4>Example Request</h4>
+                        <pre><button class="copy-button" onclick="copyCode(this)">Copy</button><code>{
+  "action": "move_mouse",
+  "coordinates": {
+    "x": 100,
+    "y": 200
+  }
+}</code></pre>
+                    </div>
+                </details>
+
+                <details>
+                    <summary>click_mouse</summary>
+                    <div class="details-content">
+                        <div class="param-details">
+                            <span class="param-name">button</span>
+                            <span class="param-type">string</span>
+                            <span class="param-required">required</span>
+                            <div class="param-description">Specifies the mouse button to click (e.g., 'left', 'right', 'middle').</div>
+                        </div>
+                         <div class="param-details">
+                            <span class="param-name">numClicks</span>
+                            <span class="param-type">integer</span>
+                            <div class="param-description">Optional. Specifies the number of clicks (default: 1).</div>
+                        </div>
+                        <h4>Example Request</h4>
+                        <pre><button class="copy-button" onclick="copyCode(this)">Copy</button><code>{
+  "action": "click_mouse",
+  "button": "left",
+  "numClicks": 2
+}</code></pre>
+                    </div>
+                </details>
+
+                <!-- Add other mouse actions (trace_mouse, press_mouse, drag_mouse, scroll) similarly -->
+
+                <h3 id="keyboard-actions">Keyboard Actions</h3>
+                 <details>
+                    <summary>type_text</summary>
+                    <div class="details-content">
+                        <div class="param-details">
+                            <span class="param-name">text</span>
+                            <span class="param-type">string</span>
+                            <span class="param-required">required</span>
+                            <div class="param-description">Specifies the text to type.</div>
+                        </div>
+                         <div class="param-details">
+                            <span class="param-name">delay</span>
+                            <span class="param-type">integer</span>
+                            <div class="param-description">Optional. Specifies the delay between keystrokes in milliseconds.</div>
+                        </div>
+                        <h4>Example Request</h4>
+                        <pre><button class="copy-button" onclick="copyCode(this)">Copy</button><code>{
+  "action": "type_text",
+  "text": "Hello, World!",
+  "delay": 50
+}</code></pre>
+                    </div>
+                </details>
+                 <details>
+                    <summary>press_keys</summary>
+                    <div class="details-content">
+                        <div class="param-details">
+                            <span class="param-name">keys</span>
+                            <span class="param-type">array</span>
+                            <span class="param-required">required</span>
+                            <div class="param-description">Specifies the keys to press (e.g., ["ctrl", "c"]).</div>
+                        </div>
+                         <div class="param-details">
+                            <span class="param-name">modifiers</span>
+                            <span class="param-type">array</span>
+                            <div class="param-description">Optional. Specifies modifier keys to hold down during the press.</div>
+                        </div>
+                        <h4>Example Request</h4>
+                        <pre><button class="copy-button" onclick="copyCode(this)">Copy</button><code>{
+  "action": "press_keys",
+  "keys": ["enter"]
+}</code></pre>
+                    </div>
+                </details>
+                 <details>
+                    <summary>hotkey</summary>
+                    <div class="details-content">
+                        <div class="param-details">
+                            <span class="param-name">keys</span>
+                            <span class="param-type">array</span>
+                            <span class="param-required">required</span>
+                            <div class="param-description">Specifies the keys for the hotkey combination (e.g., ["ctrl", "alt", "delete"]).</div>
+                        </div>
+                        <h4>Example Request</h4>
+                        <pre><button class="copy-button" onclick="copyCode(this)">Copy</button><code>{
+  "action": "hotkey",
+  "keys": ["ctrl", "s"]
+}</code></pre>
+                    </div>
+                </details>
+                 <details>
+                    <summary>type_keys</summary>
+                     <div class="details-content">
+                        <div class="param-details">
+                            <span class="param-name">keys</span>
+                            <span class="param-type">array</span>
+                            <span class="param-required">required</span>
+                            <div class="param-description">Specifies individual keys to type sequentially.</div>
+                        </div>
+                         <div class="param-details">
+                            <span class="param-name">delay</span>
+                            <span class="param-type">integer</span>
+                            <div class="param-description">Optional. Specifies the delay between key presses in milliseconds.</div>
+                        </div>
+                        <h4>Example Request</h4>
+                        <pre><button class="copy-button" onclick="copyCode(this)">Copy</button><code>{
+  "action": "type_keys",
+  "keys": ["H", "e", "l", "l", "o"],
+  "delay": 10
+}</code></pre>
+                    </div>
+                </details>
+
+                <h3 id="system-actions">System Actions</h3>
+                 <details>
+                    <summary>screenshot</summary>
+                    <div class="details-content">
+                        <p>Takes a screenshot of the entire screen.</p>
+                        <h4>Example Request</h4>
+                        <pre><button class="copy-button" onclick="copyCode(this)">Copy</button><code>{
+  "action": "screenshot"
+}</code></pre>
+                        <h4>Example Response (Success)</h4>
+                        <pre><code>{
+  "status": "success",
+  "image_data": "(base64 encoded image data)"
+}</code></pre>
+                    </div>
+                </details>
+                 <details>
+                    <summary>execute_command</summary>
+                     <div class="details-content">
+                        <div class="param-details">
+                            <span class="param-name">command</span>
+                            <span class="param-type">string</span>
+                            <span class="param-required">required</span>
+                            <div class="param-description">Specifies the shell command to execute.</div>
+                        </div>
+                        <h4>Example Request</h4>
+                        <pre><button class="copy-button" onclick="copyCode(this)">Copy</button><code>{
+  "action": "execute_command",
+  "command": "ls -l /tmp"
+}</code></pre>
+                         <h4>Example Response (Success)</h4>
+                        <pre><code>{
+  "status": "success",
+  "stdout": "total 0\n-rw-r--r-- 1 user group 0 Jan 1 10:00 file1.txt\n",
+  "stderr": "",
+  "return_code": 0
+}</code></pre>
+                    </div>
+                </details>
+                 <details>
+                    <summary>clipboard</summary>
+                     <div class="details-content">
+                        <p>Retrieves the current content of the system clipboard.</p>
+                        <h4>Example Request</h4>
+                        <pre><button class="copy-button" onclick="copyCode(this)">Copy</button><code>{
+  "action": "clipboard"
+}</code></pre>
+                         <h4>Example Response (Success)</h4>
+                        <pre><code>{
+  "status": "success",
+  "content": "Text currently in clipboard"
+}</code></pre>
+                    </div>
+                </details>
+                 <details>
+                    <summary>cursor_position</summary>
+                     <div class="details-content">
+                        <p>Gets the current X and Y coordinates of the mouse cursor.</p>
+                        <h4>Example Request</h4>
+                        <pre><button class="copy-button" onclick="copyCode(this)">Copy</button><code>{
+  "action": "cursor_position"
+}</code></pre>
+                         <h4>Example Response (Success)</h4>
+                        <pre><code>{
+  "status": "success",
+  "position": {
+    "x": 512,
+    "y": 384
+  }
+}</code></pre>
+                    </div>
+                </details>
+                <!-- Add wait action similarly -->
+
+                <h2 id="response">Response</h2>
+                <h3 id="default-response">Default Response</h3>
+                <p>Most successful actions return a simple success status:</p>
+                <pre><code>{
+  "status": "success"
+}</code></pre>
+
+                <h3 id="screenshot-response">Screenshot Response</h3>
+                <p>Returns the screenshot image data encoded in base64.</p>
+                 <pre><code>{
+  "status": "success",
+  "image_data": "(base64 encoded string)"
+}</code></pre>
+
+                <h3 id="cursor-position-response">Cursor Position Response</h3>
+                <p>Returns the current X and Y coordinates of the cursor.</p>
+                <pre><code>{
+  "status": "success",
+  "position": {
+    "x": 123,
+    "y": 456
+  }
+}</code></pre>
+
+                <h3 id="clipboard-response">Clipboard Response</h3>
+                <p>Returns the content of the clipboard.</p>
+                <pre><code>{
+  "status": "success",
+  "content": "clipboard text content"
+}</code></pre

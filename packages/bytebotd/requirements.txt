@@ -1,5 +1,0 @@
-mouseinfo
-requests
-flask
-blinker==1.4
-pyautogui

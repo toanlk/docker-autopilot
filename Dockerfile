@@ -1,5 +1,5 @@
 # -----------------------------------------------------------------------------
-# Bytebot Dockerfile - Virtual Desktop Environment
+# Autopilot Dockerfile - Virtual Desktop Environment
 # -----------------------------------------------------------------------------
 
 # Base image
@@ -104,7 +104,7 @@ RUN git clone https://github.com/novnc/noVNC.git /opt/noVNC \
     && pip3 install --break-system-packages .
 
 # -----------------------------------------------------------------------------
-# 5. Application setup (bytebotd)
+# 5. Application setup (autopilotd)
 # -----------------------------------------------------------------------------
 # Copy package files first to leverage Docker cache
 
@@ -113,9 +113,9 @@ RUN apt-get update && \
     apt-get install -y cmake libx11-dev libxtst-dev libxinerama-dev libxi-dev libxrandr-dev git build-essential && \
     rm -rf /var/lib/apt/lists/*
 
-COPY ./packages/bytebotd/ /bytebotd/
-WORKDIR /bytebotd
-RUN pip3 install -r /bytebotd/requirements.txt
+COPY ./packages/autopilotd/ /autopilotd/
+WORKDIR /autopilotd
+RUN pip3 install -r /autopilotd/requirements.txt
 
 # -----------------------------------------------------------------------------
 # 6. System configuration
@@ -127,26 +127,26 @@ COPY ./supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 RUN chmod 644 /etc/supervisor/conf.d/supervisord.conf && \
     chown root:root /etc/supervisor/conf.d/supervisord.conf
 
-# Set restrictive permissions on bytebotd directory
-RUN chown -R root:root /bytebotd && \
-    chmod -R 755 /bytebotd
+# Set restrictive permissions on autopilotd directory
+RUN chown -R root:root /autopilotd && \
+    chmod -R 755 /autopilotd
 
 # -----------------------------------------------------------------------------
 # 7. User setup and autologin configuration
 # -----------------------------------------------------------------------------
 # Create non-root user
-RUN useradd -ms /bin/bash bytebot && echo "bytebot ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+RUN useradd -ms /bin/bash autopilot && echo "autopilot ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
 RUN chmod 755 /var/run/dbus && \
-    chown bytebot:bytebot /var/run/dbus
+    chown autopilot:autopilot /var/run/dbus
 
-RUN mkdir -p /tmp/bytebot-screenshots && \
-    chown -R bytebot:bytebot /tmp/bytebot-screenshots
+RUN mkdir -p /tmp/autopilot-screenshots && \
+    chown -R autopilot:autopilot /tmp/autopilot-screenshots
 
-# Configure autologin for the bytebot user
+# Configure autologin for the autopilot user
 RUN mkdir -p /etc/lightdm/lightdm.conf.d && \
     echo '[Seat:*]' > /etc/lightdm/lightdm.conf.d/50-autologin.conf && \
-    echo 'autologin-user=bytebot' >> /etc/lightdm/lightdm.conf.d/50-autologin.conf && \
+    echo 'autologin-user=autopilot' >> /etc/lightdm/lightdm.conf.d/50-autologin.conf && \
     echo 'autologin-user-timeout=0' >> /etc/lightdm/lightdm.conf.d/50-autologin.conf && \
     echo 'autologin-session=xfce' >> /etc/lightdm/lightdm.conf.d/50-autologin.conf
 
@@ -156,25 +156,27 @@ RUN chmod 644 /etc/lightdm/lightdm.conf.d/50-autologin.conf && \
 
 # Set custom desktop background
 # Create backgrounds directory
-RUN mkdir -p /usr/share/backgrounds/bytebot
+RUN mkdir -p /usr/share/backgrounds/autopilot
 
 # Copy background.jpg from the build context
-COPY ./static/background.jpg /usr/share/backgrounds/bytebot/ 
-RUN chmod 644 /usr/share/backgrounds/bytebot/background.jpg
+COPY ./static/background.jpg /usr/share/backgrounds/autopilot/ 
+RUN chmod 644 /usr/share/backgrounds/autopilot/background.jpg
 
 # Add XFCE configuration files
 COPY ./xfce4/ /tmp/xfce4/
 
 # Set up XFCE configuration
-RUN mkdir -p /home/bytebot/.config/xfce4/ && \
+RUN mkdir -p /home/autopilot/.config/xfce4/ && \
     mkdir -p /home/bytebot/Desktop && \
     # Copy the XFCE configuration files
-    cp -r /tmp/xfce4/* /home/bytebot/.config/xfce4/ && \
+    cp -r /tmp/xfce4/* /home/autopilot/.config/xfce4/ && \
     # Create .xsessionrc file for the user to ensure XFCE starts properly
-    mkdir -p /home/bytebot/.config && \
-    echo "exec startxfce4" > /home/bytebot/.xsessionrc && \
+    mkdir -p /home/autopilot/.config && \
+    echo "exec startxfce4" > /home/autopilot/.xsessionrc && \
+    # Create Desktop directory for autopilot user
+    mkdir -p /home/autopilot/Desktop && \
     # Ensure all settings are owned by the user
-    chown -R bytebot:bytebot /home/bytebot/.config /home/bytebot/Desktop /home/bytebot/.xsessionrc
+    chown -R autopilot:autopilot /home/autopilot/.config /home/autopilot/Desktop /home/autopilot/.xsessionrc
 
 # Replace default Web Browser shortcut with Firefox
 RUN mkdir -p /etc/skel/.config/xfce4/panel/launcher-* && \
@@ -192,14 +194,14 @@ RUN mkdir -p /etc/skel/.config/xfce4/panel/launcher-* && \
     echo 'Categories=Network;WebBrowser;' >> /usr/share/applications/firefox.desktop && \
     chmod +x /usr/share/applications/firefox.desktop && \
     # Copy Firefox desktop file to panel configuration
-    mkdir -p /home/bytebot/.config/xfce4/panel && \
-    cp -f /usr/share/applications/firefox.desktop /home/bytebot/.config/xfce4/panel/ && \
+    mkdir -p /home/autopilot/.config/xfce4/panel && \
+    cp -f /usr/share/applications/firefox.desktop /home/autopilot/.config/xfce4/panel/ && \
     # Create a backup of the default XFCE panel configuration
     mkdir -p /etc/xdg/xfce4/panel/backup && \
     # Also add Firefox to desktop
-    mkdir -p /home/bytebot/Desktop && \
-    cp -f /usr/share/applications/firefox.desktop /home/bytebot/Desktop/ && \
-    chown -R bytebot:bytebot /home/bytebot/.config/xfce4/panel /home/bytebot/Desktop
+    mkdir -p /home/autopilot/Desktop && \
+    cp -f /usr/share/applications/firefox.desktop /home/autopilot/Desktop/ && \
+    chown -R autopilot:autopilot /home/autopilot/.config/xfce4/panel /home/autopilot/Desktop
 
 # Add a desktop shortcut for the Terminal
 RUN echo '[Desktop Entry]' > /usr/share/applications/terminal.desktop && \
@@ -214,22 +216,22 @@ RUN echo '[Desktop Entry]' > /usr/share/applications/terminal.desktop && \
     echo 'StartupNotify=true' >> /usr/share/applications/terminal.desktop && \
     echo 'Categories=Utility;TerminalEmulator;' >> /usr/share/applications/terminal.desktop && \
     chmod +x /usr/share/applications/terminal.desktop && \
-    mkdir -p /home/bytebot/Desktop && \
-    cp -f /usr/share/applications/terminal.desktop /home/bytebot/Desktop/ && \
-    chown -R bytebot:bytebot /home/bytebot/Desktop
+    mkdir -p /home/autopilot/Desktop && \
+    cp -f /usr/share/applications/terminal.desktop /home/autopilot/Desktop/ && \
+    chown -R autopilot:autopilot /home/autopilot/Desktop
 
-USER bytebot
-WORKDIR /home/bytebot
+USER autopilot
+WORKDIR /home/autopilot
 
 # Create .Xauthority file for X11 authentication
-RUN touch /home/bytebot/.Xauthority && \
-    chown bytebot:bytebot /home/bytebot/.Xauthority && \
-    chmod 600 /home/bytebot/.Xauthority
+RUN touch /home/autopilot/.Xauthority && \
+    chown autopilot:autopilot /home/autopilot/.Xauthority && \
+    chmod 600 /home/autopilot/.Xauthority
 
 # -----------------------------------------------------------------------------
 # 8. Port configuration and runtime
 # -----------------------------------------------------------------------------
-# - Port 9990: bytebotd
+# - Port 9990: autopilotd
 # - Port 5900: VNC display for the Ubuntu VM
 # - Port 6080: noVNC client
 # - Port 6081: noVNC HTTP proxy
