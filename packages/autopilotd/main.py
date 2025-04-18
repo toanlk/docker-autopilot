@@ -179,6 +179,19 @@ def computer_use():
             })
         except requests.exceptions.RequestException as e:
             return jsonify({'error': str(e)}), 500
+    elif action == 'upload_files':
+            files = data.get('files', [])
+            if not files:
+                return jsonify({'error': 'Files are required'}), 400
+            try:
+                for file in files:
+                    path = file['path']
+                    content = file['content']
+                    with open(path, 'w') as f:
+                        f.write(content)
+                return jsonify({'status': 'success'})
+            except Exception as e:
+                return jsonify({'error': str(e)}), 500
     else:
         return jsonify({'error': 'Invalid action'}), 400
 
