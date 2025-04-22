@@ -6,6 +6,10 @@ import os
 import pyperclip
 import requests
 import tempfile
+import cv2
+import numpy as np
+import pytesseract
+from PIL import Image
 
 app = Flask(__name__)
 
@@ -41,7 +45,7 @@ def computer_use():
     elif action == 'screenshot':
         screenshot_path = '/tmp/screenshot.png'
         try:
-            subprocess.run(['scrot', screenshot_path], check=True)
+            subprocess.run(['gnome-screenshot', '-f', screenshot_path], check=True)
             with open(screenshot_path, 'rb') as image_file:
                 encoded_string = base64.b64encode(image_file.read()).decode('utf-8')
             os.remove(screenshot_path)
@@ -199,7 +203,7 @@ def computer_use():
             return jsonify({'error': str(e)}), 500
     elif action == 'locate_on_screen':
         image_data = data.get('image_data')
-        confidence = data.get('confidence', 0.9)
+        confidence = float(data.get('confidence', 0.9))
         if not image_data:
             return jsonify({'error': 'Image data is required'}), 400
         try:
@@ -233,6 +237,65 @@ def computer_use():
             # Ensure temporary file is cleaned up even if an error occurs
             if os.path.exists(temp_path):
                 os.remove(temp_path)
+            return jsonify({'error': str(e)}), 500
+    elif action == 'locate_text':
+        text_to_find = data.get('text')
+        confidence = float(data.get('confidence', 0.7))
+        if not text_to_find:
+            return jsonify({'error': 'Text to find is required'}), 400
+        try:
+            # Take a screenshot of the screen
+            screenshot = pyautogui.screenshot()
+            
+            # Convert the PIL image to an OpenCV image (numpy array)
+            screenshot_np = np.array(screenshot)
+            screenshot_cv = cv2.cvtColor(screenshot_np, cv2.COLOR_RGB2BGR)
+            
+            # Convert to grayscale for better OCR results
+            gray = cv2.cvtColor(screenshot_cv, cv2.COLOR_BGR2GRAY)
+            
+            # Apply some preprocessing to improve OCR accuracy
+            # Apply thresholding to get a binary image
+            _, binary = cv2.threshold(gray, 150, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
+            
+            # Perform OCR on the image
+            ocr_data = pytesseract.image_to_data(binary, output_type=pytesseract.Output.DICT)
+            
+            # Find the text in the OCR results
+            text_locations = []
+            for i in range(len(ocr_data['text'])):
+                # Get the text and its confidence
+                detected_text = ocr_data['text'][i]
+                text_confidence = float(ocr_data['conf'][i]) / 100.0  # Convert to 0-1 range
+                
+                # Check if the text matches (case insensitive) and has sufficient confidence
+                if (detected_text.lower() == text_to_find.lower() or text_to_find.lower() in detected_text.lower()) and text_confidence >= confidence:
+                    # Get the bounding box
+                    x = ocr_data['left'][i]
+                    y = ocr_data['top'][i]
+                    width = ocr_data['width'][i]
+                    height = ocr_data['height'][i]
+                    
+                    text_locations.append({
+                        'x': x,
+                        'y': y,
+                        'width': width,
+                        'height': height,
+                        'confidence': text_confidence,
+                        'detected_text': detected_text
+                    })
+            
+            if text_locations:
+                return jsonify({
+                    'status': 'success',
+                    'locations': text_locations
+                })
+            return jsonify({
+                'status': 'success',
+                'locations': []
+            })
+        except Exception as e:
+            print(f'Error in locate_text: {str(e)}')
             return jsonify({'error': str(e)}), 500
     else:
         return jsonify({'error': 'Invalid action'}), 400

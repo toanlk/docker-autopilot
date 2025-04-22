@@ -6,3 +6,4 @@ pyautogui
 pyperclip
 Pillow>=9.2.0
 packaging
+pytesseract

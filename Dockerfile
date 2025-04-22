@@ -35,6 +35,9 @@ RUN apt-get update && apt-get install -y \
     # Libraries
     python3-dev \
     python3-tk \
+    # OCR engine
+    tesseract-ocr \
+    libtesseract-dev \
     xdotool \
     libxtst-dev \
     # Remove unneeded dependencies
