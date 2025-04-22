@@ -3,8 +3,9 @@ import pyautogui
 import subprocess
 import base64
 import os
-import pyperclip  # Add this import at the top
-import requests  # Add this import for making HTTP requests
+import pyperclip
+import requests
+import tempfile
 
 app = Flask(__name__)
 
@@ -195,6 +196,43 @@ def computer_use():
             return jsonify({'status': 'success'})
         except Exception as e:
             print(e)
+            return jsonify({'error': str(e)}), 500
+    elif action == 'locate_on_screen':
+        image_data = data.get('image_data')
+        confidence = data.get('confidence', 0.9)
+        if not image_data:
+            return jsonify({'error': 'Image data is required'}), 400
+        try:
+            # Create a temporary file with a random name to store the decoded image
+            with tempfile.NamedTemporaryFile(suffix='.png', delete=False) as temp_file:
+                temp_path = temp_file.name
+                image_bytes = base64.b64decode(image_data)
+                temp_file.write(image_bytes)
+            
+            # Use the temporary file for screen location detection
+            location = pyautogui.locateOnScreen(temp_path, confidence=confidence)
+            
+            # Clean up the temporary file
+            os.remove(temp_path)
+            
+            if location:
+                return jsonify({
+                    'status': 'success',
+                    'location': {
+                        'x': location.left,
+                        'y': location.top,
+                        'width': location.width,
+                        'height': location.height
+                    }
+                })
+            return jsonify({
+                'status': 'success',
+                'location': None
+            })
+        except Exception as e:
+            # Ensure temporary file is cleaned up even if an error occurs
+            if os.path.exists(temp_path):
+                os.remove(temp_path)
             return jsonify({'error': str(e)}), 500
     else:
         return jsonify({'error': 'Invalid action'}), 400

@@ -1,6 +1,8 @@
-mouseinfo
+opencv-python
 requests>=2.31.0
 flask
 blinker==1.4
 pyautogui
 pyperclip
+Pillow>=9.2.0
+packaging

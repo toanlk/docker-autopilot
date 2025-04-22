@@ -31,7 +31,7 @@ RUN apt-get update && apt-get install -y \
     # Applications
     xpdf gedit xpaint \
     # Screenshot tool
-    scrot \
+    gnome-screenshot \
     # Libraries
     python3-dev \
     python3-tk \
@@ -92,7 +92,7 @@ RUN apt-get update && apt-get install -y \
 
 # Upgrade pip
 # RUN pip3 install --upgrade pip
-RUN pip3 install --upgrade pip setuptools wheel
+RUN pip3 install --upgrade pip setuptools wheel Pillow
 
 # -----------------------------------------------------------------------------
 # 4. VNC and remote access setup
