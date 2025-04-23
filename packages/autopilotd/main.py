@@ -53,11 +53,14 @@ class ComputerUseRequest(BaseModel):
 @app.post('/computer-use')
 async def computer_use(request: ComputerUseRequest):
     if request.action == 'move_mouse':
-        subprocess.run(['xdotool', 'mousemove', str(request.coordinates.x), str(request.coordinates.y)])
+        pyautogui.moveTo(request.coordinates.x, request.coordinates.y)
     elif request.action == 'click_mouse':
-        subprocess.run(['xdotool', 'click', '--repeat', str(request.numClicks), request.button])
+        pyautogui.click(button=request.button, clicks=request.numClicks)
     elif request.action == 'type_text':
-        subprocess.run(['xdotool', 'type', '--delay', str(request.delay), request.text])
+        if request.delay > 0:
+            pyautogui.write(request.text, interval=request.delay)
+        else:
+            pyautogui.write(request.text)
     elif request.action == 'press_keys':
         for modifier in request.modifiers or []:
             pyautogui.keyDown(modifier)
