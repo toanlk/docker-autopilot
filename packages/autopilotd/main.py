@@ -58,6 +58,10 @@ async def computer_use(request: ComputerUseRequest):
         subprocess.run(['xdotool', 'click', '--repeat', str(request.numClicks), request.button])
     elif request.action == 'type_text':
         subprocess.run(['xdotool', 'type', '--delay', str(request.delay), request.text])
+    elif request.action == 'mouse_move':
+        pyautogui.moveTo(x=request.coordinates.x, y=request.coordinates.y, duration=request.delay)
+    elif request.action == 'mouse_click':
+        pyautogui.click(x=request.coordinates.x, y=request.coordinates.y, button=request.button)
     elif request.action == 'press_keys':
         for modifier in request.modifiers or []:
             pyautogui.keyDown(modifier)
