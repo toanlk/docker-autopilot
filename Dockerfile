@@ -87,14 +87,12 @@ RUN apt-get update && apt-get install -y \
     && echo 'WebBrowser=firefox-esr' > /etc/xdg/xfce4/helpers.rc \
     && fc-cache -f -v
 
-# Install Node.js
-# RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
-#     && apt-get update \
-#     && apt-get install -y nodejs \
-#     && apt-get clean && rm -rf /var/lib/apt/lists/*
+# Install autossh
+RUN apt-get update && \
+    apt-get install -y autossh && \
+    rm -rf /var/lib/apt/lists/*
 
-# Upgrade pip
-# RUN pip3 install --upgrade pip
+# Install Python packages
 RUN pip3 install --upgrade pip setuptools wheel Pillow
 
 # -----------------------------------------------------------------------------
