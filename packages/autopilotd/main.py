@@ -9,7 +9,7 @@ import requests
 import tempfile
 import cv2
 import numpy as np
-import pytesseract
+import easyocr
 from PIL import Image
 from typing import Optional, List, Dict, Any
 from pydantic import BaseModel
@@ -183,28 +183,28 @@ async def computer_use(request: ComputerUseRequest):
             print(e)
             raise HTTPException(status_code=500, detail=str(e))
     elif request.action == 'locate_text':
-        if not request.text_to_find:
-            raise HTTPException(status_code=400, detail='Text to find is required')
         try:
             screenshot = pyautogui.screenshot()
             screenshot_np = np.array(screenshot)
             screenshot_cv = cv2.cvtColor(screenshot_np, cv2.COLOR_RGB2BGR)
             gray = cv2.cvtColor(screenshot_cv, cv2.COLOR_BGR2GRAY)
             _, binary = cv2.threshold(gray, 150, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
-            ocr_data = pytesseract.image_to_data(binary, output_type=pytesseract.Output.DICT)
+            reader = easyocr.Reader(['en'])
+            results = reader.readtext(screenshot_cv)
             
             text_locations = []
-            for i in range(len(ocr_data['text'])):
-                detected_text = ocr_data['text'][i]
-                text_confidence = float(ocr_data['conf'][i]) / 100.0
-                
-                if (detected_text.lower() == request.text_to_find.lower() or 
-                    request.text_to_find.lower() in detected_text.lower()) and text_confidence >= request.confidence:
+            for (bbox, detected_text, text_confidence) in results:
+                if not request.text_to_find or (
+                    (detected_text.lower() == request.text_to_find.lower() or 
+                    request.text_to_find.lower() in detected_text.lower())) and text_confidence >= request.confidence:
+                    # bbox format: [[x1,y1], [x2,y1], [x2,y2], [x1,y2]]
+                    x1, y1 = bbox[0]
+                    x2, y2 = bbox[2]
                     text_locations.append({
-                        'x': ocr_data['left'][i],
-                        'y': ocr_data['top'][i],
-                        'width': ocr_data['width'][i],
-                        'height': ocr_data['height'][i],
+                        'x': int(x1),
+                        'y': int(y1),
+                        'width': int(x2 - x1),
+                        'height': int(y2 - y1),
                         'confidence': text_confidence,
                         'detected_text': detected_text
                     })
