@@ -115,6 +115,47 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && echo 'WebBrowser=firefox-esr' > /etc/xdg/xfce4/helpers.rc \
     && fc-cache -f -v
 
+RUN install -m 0755 -d /etc/firefox/policies && \
+    cat > /etc/firefox/policies/policies.json <<'EOF'
+{
+  "policies": {
+    "FirefoxHome": {
+      "Search": true, "TopSites": false, "SponsoredTopSites": false,
+      "Highlights": false, "Pocket": false, "SponsoredPocket": false,
+      "Snippets": false, "Locked": true
+    },
+    "PDFjs": { "Enabled": true, "EnablePermissions": true },
+    "Notifications": { "BlockNewRequests": true, "Locked": true },
+    "UserMessaging": {
+      "ExtensionRecommendations": false, "FeatureRecommendations": false,
+      "UrlbarInterventions": false, "SkipOnboarding": true,
+      "MoreFromMozilla": false, "FirefoxLabs": false
+    },
+    "PasswordManager": {
+      "Enabled": false,
+      "Locked": true,
+      "AskToSaveLogins": false,
+      "AutomaticUpdates": false,
+      "AllowPasswordStorage": false,
+      "BlockMasterPasswordCreation": true
+    },
+    "Browser": {
+      "RestoreSessionEnabled": false,
+      "RestoreSessionOnStartup": false,
+      "RememberPasswords": false,
+      "ClearOnShutdown": {
+        "Passwords": true
+      }
+    },
+    "Preferences": {
+      "signon.rememberSignons": false,
+      "signon.autofillForms": false,
+      "signon.generation.enabled": false
+    }
+  }
+}
+EOF
+
 # Install Python packages
 RUN pip3 install --no-cache-dir --upgrade pip setuptools wheel Pillow
 
