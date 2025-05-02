@@ -65,6 +65,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     tesseract-ocr \
     libtesseract-dev \
     xdotool \
+    wmctrl \
     libxtst-dev \
     # Cleanup in the same layer to reduce image size
     && apt-get remove -y light-locker xfce4-screensaver xfce4-power-manager || true \
