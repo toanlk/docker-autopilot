@@ -51,7 +51,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     # Display manager with autologin capability
     lightdm \
     # Development tools
-    python3 python3-pip curl wget git vim \
+    python3 python3-pip curl wget git vim nano \
     # Utilities
     supervisor netcat-openbsd \
     # Applications
