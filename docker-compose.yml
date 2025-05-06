@@ -15,65 +15,65 @@ services:
     networks:
       - autopilot-network
 
-  redis:
-    image: redis:7-alpine
-    container_name: autopilot-redis
-    restart: unless-stopped
-    ports:
-      - "6379:6379"
-    command: redis-server --save 20 1 --loglevel warning
-    networks:
-      - autopilot-network
-    volumes:
-      - redis_data:/data
+  # redis:
+  #   image: redis:7-alpine
+  #   container_name: autopilot-redis
+  #   restart: unless-stopped
+  #   ports:
+  #     - "6379:6379"
+  #   command: redis-server --save 20 1 --loglevel warning
+  #   networks:
+  #     - autopilot-network
+  #   volumes:
+  #     - redis_data:/data
 
-  postgres:
-    image: postgres:16-alpine
-    container_name: autopilot-postgres
-    restart: unless-stopped
-    ports:
-      - "5432:5432"
-    environment:
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_USER=postgres
-      - POSTGRES_DB=autopilotdb
-    networks:
-      - autopilot-network
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
+  # postgres:
+  #   image: postgres:16-alpine
+  #   container_name: autopilot-postgres
+  #   restart: unless-stopped
+  #   ports:
+  #     - "5432:5432"
+  #   environment:
+  #     - POSTGRES_PASSWORD=postgres
+  #     - POSTGRES_USER=postgres
+  #     - POSTGRES_DB=autopilotdb
+  #   networks:
+  #     - autopilot-network
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
 
-  autopilot-agent:
-    build:
-      context: ../../packages/
-      dockerfile: autopilot-agent/Dockerfile
-    container_name: autopilot-agent
-    restart: unless-stopped
-    ports:
-      - "9991:9991"
-    environment:
-      - REDIS_URL=redis://redis:6379
-      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/autopilotdb
-      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
-    depends_on:
-      - redis
-      - postgres
-    networks:
-      - autopilot-network
+  # autopilot-agent:
+  #   build:
+  #     context: ../../packages/
+  #     dockerfile: autopilot-agent/Dockerfile
+  #   container_name: autopilot-agent
+  #   restart: unless-stopped
+  #   ports:
+  #     - "9991:9991"
+  #   environment:
+  #     - REDIS_URL=redis://redis:6379
+  #     - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/autopilotdb
+  #     - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+  #   depends_on:
+  #     - redis
+  #     - postgres
+  #   networks:
+  #     - autopilot-network
 
-  autopilot-ui:
-    build:
-      context: ../../packages/
-      dockerfile: autopilot-ui/Dockerfile
-    container_name: autopilot-ui
-    restart: unless-stopped
-    ports:
-      - "9992:9992"
-    environment:
-      - NODE_ENV=production
-    depends_on:
-      - autopilot-agent
-    networks:
-      - autopilot-network
+  # autopilot-ui:
+  #   build:
+  #     context: ../../packages/
+  #     dockerfile: autopilot-ui/Dockerfile
+  #   container_name: autopilot-ui
+  #   restart: unless-stopped
+  #   ports:
+  #     - "9992:9992"
+  #   environment:
+  #     - NODE_ENV=production
+  #   depends_on:
+  #     - autopilot-agent
+  #   networks:
+  #     - autopilot-network
 
 networks:
   autopilot-network:
