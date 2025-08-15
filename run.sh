@@ -17,5 +17,5 @@ docker run --privileged -d \
 
 docker rm -f "docker-autopilot-4"
 docker run --privileged -d \
-        -p 9993:9990 -p 6100:5900 -p 6086:6080 -p 6087:6081 \
+        -p 9993:9990 -p 6200:5900 -p 6086:6080 -p 6087:6081 \
         --name "docker-autopilot-4" "docker-autopilot"
