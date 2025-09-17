@@ -290,6 +290,8 @@ RUN touch /home/autopilot/.Xauthority && \
     chown autopilot:autopilot /home/autopilot/.Xauthority && \
     chmod 600 /home/autopilot/.Xauthority
 
+RUN touch /root/.Xauthority
+
 # Switch to non-root user at the end to avoid permission issues with subsequent layers
 USER autopilot
 WORKDIR /home/autopilot

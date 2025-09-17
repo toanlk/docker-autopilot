@@ -8,3 +8,5 @@ Pillow>=9.2.0
 packaging
 easyocr
 pydantic>=2.0.0
+yml
+discord
