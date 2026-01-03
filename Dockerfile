@@ -164,7 +164,7 @@ RUN pip3 install --no-cache-dir --upgrade pip setuptools wheel Pillow
 # 4. VNC and remote access setup
 # -----------------------------------------------------------------------------
 # Install noVNC and websockify - use specific versions for better caching
-RUN git clone --depth 1 https://github.com/novnc/noVNC.git /opt/noVNC \
+RUN git clone --depth 1 --branch v1.3.0 https://github.com/novnc/noVNC.git /opt/noVNC \
     && git clone --depth 1 https://github.com/novnc/websockify.git /opt/websockify \
     && cd /opt/websockify \
     && pip3 install --no-cache-dir --break-system-packages .
