@@ -157,10 +157,6 @@ RUN install -m 0755 -d /etc/firefox/policies && \
 }
 EOF
 
-# Install Poetry
-RUN curl -sSL https://install.python-poetry.org | python3 - && \
-    echo 'export PATH="$HOME/.local/bin:$PATH"' >> /home/autopilot/.bashrc
-
 # Install Python packages
 RUN pip3 install --no-cache-dir --upgrade pip setuptools wheel Pillow
 
@@ -299,6 +295,10 @@ RUN touch /root/.Xauthority
 # Switch to non-root user at the end to avoid permission issues with subsequent layers
 USER autopilot
 WORKDIR /home/autopilot
+
+# Install Poetry
+RUN curl -sSL https://install.python-poetry.org | python3 - && \
+    echo 'export PATH="$HOME/.local/bin:$PATH"' >> /home/autopilot/.bashrc
 
 # -----------------------------------------------------------------------------
 # 8. Port configuration and runtime
